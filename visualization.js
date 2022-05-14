@@ -43,7 +43,7 @@ class getProtocol {
         this.get_http = () => new Promise((resolve, reject) => {
             let input_url = new URL(this.address)
             input_url.port = 3001
-            axios.get(input_url.href + this.topic)
+            axios.get(input_url.href + this.topic) // TODO: remove topic ???
                 .then(function (response) {
                     let res = (response.data).toString()
                     resolve(res)
@@ -112,4 +112,5 @@ function visualize(protocol,host,topic) {
     }
 }
 
+module.exports = getProtocol;
 module.exports = { visualize };

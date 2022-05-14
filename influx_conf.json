@@ -1,0 +1,9 @@
+{
+    "token": "",
+    "org": "",
+    "bucket" : "",
+    "url" : "",
+    "mesurement" :"mesurement",
+    "field": "field_cambiato",
+    "defaultTag":"{\"chiave\": \"valore\"}"
+}
