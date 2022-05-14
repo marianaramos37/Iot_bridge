@@ -45,7 +45,7 @@ const argv = yargs
     description: 'Tell the command',
   })
   .help()
-  .alias('help', 'h').argv;
+  .alias('helpMe', 'h').argv;
 
   
 if (argv.command == 'visualize') {
@@ -57,6 +57,7 @@ if (argv.command == 'visualize') {
         }
         return true
     })
-    visualization.visualize(argv.protocol, argv.host, argv.topic)
+    
+    visualization.visualize(argv.p, argv.h, argv.t)
 }
   
