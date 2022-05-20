@@ -13,7 +13,7 @@ class getProtocol {
             let readableStream = new Stream.Readable({
                 objectMode: true
             });
-            let client = mqtt.connect('mqtt://test.mosquitto.org'); //TODO: change connection address to the one being passed in arguments
+            let client = mqtt.connect('mqtt://localhost:1883'); //TODO: change connection address to the one being passed in arguments
             readableStream._read = () => { };
             callBack(readableStream);
             client.on('connect', () => {
@@ -43,7 +43,7 @@ class getProtocol {
         this.get_http = () => new Promise((resolve, reject) => {
             let input_url = new URL(this.address)
             input_url.port = 3001
-            axios.get(input_url.href + this.topic) // TODO: remove topic ???
+            axios.get(input_url.href)
                 .then(function (response) {
                     let res = (response.data).toString()
                     resolve(res)
@@ -101,8 +101,7 @@ function visualize(protocol,host,topic) {
                     await new Promise(resolve => setTimeout(resolve, 2000)) //Sleep 2 seconds before emiting new event
                     eventEmitterHttp.emit('start')
                 } catch (error) {
-                    console.log("Http error")
-                    console.log(error)
+                    console.log("Http error - " + error)
                 }
             })
             eventEmitterHttp.emit('start')
@@ -112,5 +111,4 @@ function visualize(protocol,host,topic) {
     }
 }
 
-module.exports = getProtocol;
-module.exports = { visualize };
+module.exports = { getProtocol, visualize };

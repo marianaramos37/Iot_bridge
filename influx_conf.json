@@ -1,9 +1,9 @@
 {
-    "token": "",
-    "org": "",
-    "bucket" : "",
-    "url" : "",
-    "mesurement" :"mesurement",
-    "field": "field_cambiato",
-    "defaultTag":"{\"chiave\": \"valore\"}"
+    "token": "4zW8lHjnhZRKpcZ2YbtOGBy_41rZB9wrIqYqTdOkgpY6wHGfmi4cdBZBMa6jqikfl9khb-qP8m9F6-NJlV1VQQ==",
+    "org": "iot_bridge",
+    "bucket" : "iot_bucket",
+    "url" : "http://localhost:8086",
+    "mesurement" :"testmeasure",
+    "field": "temperature",
+    "defaultTag":"{\"location\": \"coyote_creek\"}"
 }

@@ -41,7 +41,22 @@ const argv = yargs
     alias: 'i',
     nargs: 1,
     type: 'string',
-    description: 'Tell the command',
+    description: 'Tell the influx configuration file',
+    requiresArg: true,
+  })
+  .option('destprotocol', {
+    alias: 'd',
+    nargs: 1,
+    type: 'string',
+    description: 'Tell the destination protocol',
+    requiresArg: true,
+    choices: ['mqtt', 'coap', 'http']
+  })
+  .option('config', {
+    alias: 'f',
+    nargs: 1,
+    type: 'string',
+    description: 'Tell the destination protocol',
     requiresArg: true,
   })
   .option('command', {
@@ -86,9 +101,9 @@ if (argv.command == 'save') {
 }
 if (argv.command == 'aggregate') {
   // TODO checking
-  aggregation.aggregate(argv.p, argv.h, argv.t, argv.i)
+  aggregation.aggregate(argv.p, argv.h, argv.t, argv.n) 
 }
 if (argv.command == 'translate') {
   // TODO checking
-  bridging.translate(argv.p, argv.h, argv.t, argv.i)
+  bridging.translate(argv.p, argv.h, argv.t, argv.d, argv.f)
 }

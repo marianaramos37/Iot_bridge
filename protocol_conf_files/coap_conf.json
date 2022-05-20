@@ -1,0 +1,4 @@
+{
+    "protocol":"coap",
+    "host": "coap://localhost"
+}
