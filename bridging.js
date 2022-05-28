@@ -27,8 +27,7 @@ class Bridge{
                         console.log("Received: " + reply);
                         res.end(reply, "UTF-8");
                     } catch (error) {
-                        console.log("Errore nella richiesta http ");
-                        console.log(error);
+                        console.log("HTTP error - " + error);
                     }
 
                 } else {
@@ -49,10 +48,10 @@ class Bridge{
 
                 try {
                     res.on('timeout', function () {
-                        console.log("Timeout.");
+                        console.log("Timeout error");
                     })
                     req.on('close', function () {
-                        console.log("Closed connection.");
+                        console.log("Connection closed.");
                     })
                     reply = await display.get_coap();
                     
@@ -65,7 +64,7 @@ class Bridge{
                 }
             })
             app.listen(3001, () => {
-                console.log(`Example app listening at http://localhost:${3001}${path}`)
+                console.log(`Confirmation: Sarted HTTP Server on Port 3001${path}. Listening...`)
             })
 
         }
@@ -78,7 +77,7 @@ class Bridge{
             server.on('request', (req, res) => {
                 ind= objsMqtt.findIndex(value => value.url === req.url)
                 if (ind === -1) {
-                    console.log("Non trovato");
+                    console.log("This topic was not found, please choose another one.");
                     res.end()
                 }
                 else {
@@ -87,19 +86,19 @@ class Bridge{
 
             })
             server.listen(this.dstPort, () => {
-                console.log('server coap started')
+                console.log('Confirmation: Sarted COAP Server. Listening...')
             })
 
             display.get_mqtt((stream_r) => {
                 stream_r.on('readable', () => {
-                    // There is some data to read now.
+                    // Starting to read data
                     while (data = stream_r.read()) {
                         t = data.topic.toString();
                         m = data.message.toString();
                         ind= objsMqtt.findIndex(value => value.url === '/'+ t)
                         ind === -1 ? objsMqtt.push({ url: '/' + t, value: m }) : objsMqtt[ind].value = m
                         console.log(objsMqtt);
-                        console.log("-------------------------");
+                        
                     }
                 })
             })
@@ -121,12 +120,11 @@ class Bridge{
                         value = await display.get_coap() // aspetta che la richiesta al server coap restituisca un messaggio
                         client.publish((my_url.pathname).slice(1), value)
                         console.log((my_url.pathname).slice(1))
-                        console.log('Valore ricevuto dal server coap e pubblicato')
+                        console.log('Received value in COAP server and published.')
                         await new Promise(resolve => setTimeout(resolve, 3000)) //New coap request each 3 seconds
                         eventEmitter.emit('start')
                     } catch (error) {
-                        console.log("Errore nella lettura del server coap")
-                        console.log(error)
+                        console.log("COAP error - " + error)
                     }
 
                 })
@@ -142,12 +140,11 @@ class Bridge{
             let objsMqtt = []
     
             server.get('*', (req, res) => {
-                // console.log(this.topic);
                 res.on('timeout', () => {
-                    console.log("Intercettato timeout");
+                    console.log("Timeout error");
                 })
                 req.on('close', function () {
-                    console.log("Connessione chiusa ");
+                    console.log("Connection closed.");
                 })
                 ind= objsMqtt.findIndex(value => value.url === req.path)
                 if (ind === -1) {
@@ -159,8 +156,7 @@ class Bridge{
     
             })
             server.listen(3001, () => {
-                console.log(`Server started at port : 3001 , 
-                supplied topic : ${this.topic}`)
+                console.log(`Server started at port: 3001. Topic : ${this.topic}`)
             })
     
             display.get_mqtt((stream_r) => {
@@ -173,7 +169,7 @@ class Bridge{
                         ind= objsMqtt.findIndex(value => value.url === '/' + t)
                         ind === -1 ? objsMqtt.push({ url: '/' + t, value: m }) : objsMqtt[ind].value = m
                         console.log(objsMqtt);
-                        console.log("-------------------------");
+                        
     
                     }
                 })
@@ -198,16 +194,13 @@ class Bridge{
 
                         client.publish((my_url.pathname).slice(1), value)
                         console.log((my_url.pathname).slice(1))
-                        console.log('Valore ricevuto dal server http e pubblicato')
+                        console.log('Received value in HTTP server and published.')
                         await new Promise(resolve => setTimeout(resolve, 3000)) //New HTTP request each 3 seconds
                         eventEmitter.emit('start')
 
                     } catch (error) {
-                        console.log("Errore nella lettura del server http")
-                        console.log(error)
-                        //eventEmitter.emit('start')
+                        console.log("HTTP error - " + error)
                     }
-
                 })
                 eventEmitter.emit('start')
             })
@@ -227,7 +220,6 @@ function readJsonFile(file) {
 function translate(protocol,host,topic,destination_protocol,protocol_conf_file) {
     const data = readJsonFile(protocol_conf_file) // Read data from conf file
 
-    
     let bridge = new Bridge(host, topic, data.host)
 
     if (((protocol) == 'mqtt') && ((destination_protocol) == 'coap')) {

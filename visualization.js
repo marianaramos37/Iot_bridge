@@ -30,7 +30,7 @@ class getProtocol {
             let url = new URL(this.address);
             url.port = 5683;
             if (url.protocol != 'coap:') {
-                reject("The url provided doesn't have protocol = coap")
+                reject("Please add protocol = coap")
             }
             request = coap.request(url)
             request.end();
@@ -85,8 +85,7 @@ function visualize(protocol,host,topic) {
                     await new Promise(resolve => setTimeout(resolve, 2000)) //Sleep 2 seconds before emiting new event
                     eventEmitterCoap.emit('start')
                 } catch (error) {
-                    console.log("Coap error")
-                    console.log(error)
+                    console.log("Coap error - " + error)
                 }
             })
             eventEmitterCoap.emit('start')

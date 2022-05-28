@@ -77,7 +77,7 @@ if (argv.command == 'visualize') {
     yargs.check((argv) => {
         if (argv.protocol == 'mqtt') {
             if (!argv.t) {
-                throw new Error("Please tell the topic of interest for the subscription.")
+                throw new Error("Please specify the topic of interest for the subscription.")
             }
         }
         return true
@@ -89,21 +89,44 @@ if (argv.command == 'save') {
   yargs.check((argv) => {
       if (argv.protocol == 'mqtt') {
           if (!argv.t) {
-              throw new Error("Please tell the topic of interest for the subscription.")
+              throw new Error("Please specify the topic of interest for the subscription.")
           }
       }
       if (!argv.i) {
-        throw new Error("Please tell the influx configuaration file.")
+        throw new Error("Please specify the influx configuaration file.")
       }
       return true
   })
   storage.save(argv.p, argv.h, argv.t, argv.i)
 }
 if (argv.command == 'aggregate') {
-  // TODO checking
+  yargs.check((argv) => {
+    if (argv.protocol == 'mqtt') {
+        if (!argv.t) {
+            throw new Error("Please specify the topic of interest for the subscription.")
+        }
+    }
+    if (!argv.n) {
+      throw new Error("Please specify the aggregation count.")
+    }
+    return true
+  })
   aggregation.aggregate(argv.p, argv.h, argv.t, argv.n) 
 }
 if (argv.command == 'translate') {
-  // TODO checking
+  yargs.check((argv) => {
+    if (argv.protocol == 'mqtt') {
+        if (!argv.t) {
+            throw new Error("Please specify the topic of interest for the subscription.")
+        }
+    }
+    if (!argv.f) {
+      throw new Error("Please specify configuration file of the destination protocol.")
+    }
+    if (!argv.d) {
+      throw new Error("Please specify the destination protocol.")
+    }
+    return true
+  })
   bridging.translate(argv.p, argv.h, argv.t, argv.d, argv.f)
 }

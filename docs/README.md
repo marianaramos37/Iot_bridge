@@ -22,11 +22,19 @@ npm install --save @influxdata/influxdb-client
 ```
 node ./<protocol>_simulator.js
 ```
-2. Visualize responses:s
+2. Visualize responses:
 ```
 node ./bridgeIoT.js -p <protocol> -h <host_address> -t <topic> -c visualize
 ```
+
+*Note*: 
+
+- Simulator of HTTP runs on port: 3001
+- Simulator of COAP runs on port: 5683
+- Simulator of MQTT runs on port: 1883, default of Mosquitto
+
 **Examples:**
+
 Visualize MQTT protocol
 ```
 > node ./mqtt_simulator.js
@@ -53,6 +61,7 @@ node ./<protocol>_simulator.js
 node ./bridgeIoT.js -p <protocol> -h <host_address> -t <topic> -c aggregate -n <n>
 ```
 **Examples:**
+
 Visualize statistics MQTT protocol - every 5 observations
 ```
 > node ./mqtt_simulator.js
@@ -82,7 +91,9 @@ node ./<protocol>_simulator.js
 ```
 node ./bridgeIoT.js -p <protocol> -h <address> -t <topic> -i <file with influx configuration> -c save
 ```
+
 **Examples:**
+
 Store MQTT protocol data
 ```
 TODO: mqtt not working

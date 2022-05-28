@@ -24,7 +24,7 @@ class InfluxInstance{
                     writeApi.useDefaultTags(defaultTags)
                     return writeApi
                 } catch (error) {
-                    console.log("Errore nel parsing dei tag di default")
+                    console.log(error)
                     return writeApi
                 }
     
@@ -64,7 +64,7 @@ class InfluxInstance{
 
         // STORAGE MQTT PROTOCOL
         this.mqtt_save = function () {
-            console.log("Saving mqtt")
+            console.log("Saving MQTT protocol data...")
             let data, t, m, response;
             display.get_mqtt((stream_r) => {
                 stream_r.on('readable', async () => {
@@ -74,7 +74,7 @@ class InfluxInstance{
                         try {
                             response = await this.saveInflux(this.mesurement, this.field, m, t)
                         } catch (error) {
-                            console.log("errore nel salvataggio su influx");
+                            console.log("Influx storage error MQTT- " + error);
                         }
                     }
                 });
@@ -85,7 +85,7 @@ class InfluxInstance{
         // STORAGE COAP PROTOCOL
         this.coap_save = function () {
             let response, response_influx;
-            console.log("Saving coap")
+            console.log("Saving COAP protocol data...")
 
             const eventEmitter = new EventEmitter()            
             eventEmitter.on('start', async () => {
@@ -98,8 +98,7 @@ class InfluxInstance{
                     eventEmitter.emit('start')
     
                 } catch (error) {
-                    console.log("Error influx coap save")
-                    console.log(error)
+                    console.log("Influx storage error COAP- " + error)
                 }
             })
             eventEmitter.emit('start')
@@ -108,7 +107,7 @@ class InfluxInstance{
         // STORAGE HTTP PROTOCOL
         this.http_save = function () {
             let response, response_influx;
-            console.log("Saving http")
+            console.log("Saving HTTP protocol data...")
 
             const eventEmitter = new EventEmitter()            
             eventEmitter.on('start', async () => {
@@ -121,8 +120,7 @@ class InfluxInstance{
                     eventEmitter.emit('start')
     
                 } catch (error) {
-                    console.log("Error influx coap save")
-                    console.log(error)
+                    console.log("Influx storage error HTTP - " + error)
                 }
             })
             eventEmitter.emit('start')
