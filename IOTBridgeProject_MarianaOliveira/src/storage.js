@@ -43,7 +43,7 @@ class InfluxInstance{
                 try {
                     let response = await new Promise(function (res, rej) {
                         writeApi.writePoint(point)
-                        console.log("Point added: " + point)
+                        console.log("Added Point: " + point)
                         writeApi.close().then(() => {
                                 res('FINISHED')
                             })

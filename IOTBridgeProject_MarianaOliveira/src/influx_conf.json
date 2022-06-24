@@ -4,6 +4,6 @@
     "bucket" : "iot_bucket",
     "url" : "http://localhost:8086",
     "mesurement" :"testmeasure",
-    "field": "temperature",
-    "defaultTag":"{\"location\": \"coyote_creek\"}"
+    "field": "humidity",
+    "defaultTag":"{\"location\": \"Portugal\"}"
 }

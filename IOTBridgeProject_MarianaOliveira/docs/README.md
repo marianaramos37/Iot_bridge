@@ -1,7 +1,7 @@
 # IOT Bridge Platform
 By: Mariana Oliveira Ramos
 
-Unibo, Internet of Things, 2021/2022
+University of Bologna, Internet of Things, 2021/2022
 
 ## Requirements:
 In the command shell run: 
@@ -13,6 +13,14 @@ npm install axios --save
 npm install express --save
 npm install --save @influxdata/influxdb-client
 ```
+
+## Run the project: 
+```
+
+node ./bridgeIoT.js --help
+
+```
+
 ## Features:
 
 
@@ -29,9 +37,9 @@ node ./bridgeIoT.js -p <protocol> -h <host_address> -t <topic> -c visualize
 
 *Note*: 
 
-- Simulator of HTTP runs on port: 3001
-- Simulator of COAP runs on port: 5683
-- Simulator of MQTT runs on port: 1883, default of Mosquitto
+- Simulator of HTTP runs on port: localhost/3001
+- Simulator of COAP runs on port: localhost/5683
+- Simulator of MQTT runs on port: localhost/1883, default of Mosquitto
 
 **Examples:**
 
@@ -80,8 +88,8 @@ Visualize statistics HTTP protocol - every 5 observations
 
 ### *Storage*
 
-- Inicialize InfluxDB: C:\Program Files\InfluxData>influxd. http://localhost:8086/
-- Inicialize Grafana: http://localhost:3000 
+- Inicialize InfluxDB: C:\Program Files\InfluxData> influxd. http://localhost:8086/
+- Inicialize Grafana: http://localhost:3000 (Docker container), URL IP of Influx: 192.168.32.1, PORT: 8086
 
 1. Initialize the data simulation:
 ```
@@ -96,7 +104,6 @@ node ./bridgeIoT.js -p <protocol> -h <address> -t <topic> -i <file with influx c
 
 Store MQTT protocol data
 ```
-TODO: mqtt not working
 > node ./mqtt_simulator.js
 > node ./bridgeIoT.js -p "mqtt" -h "mqtt://localhost" -t temperature -i influx_conf.json -c save
 ```
@@ -111,7 +118,12 @@ Store HTTP protocol data
 > node ./bridgeIoT.js -p "http" -h "http://localhost/temperature" -i influx_conf.json -c save
 ```
 
-![Coap First Results](C:\Users\Utilizador\Desktop\4ano\iot\Iot_bridge\img\coap_first.png)
+Query example for Grafana in Flux:
+```
+from(bucket:"iot_bucket")
+|> range(start: -1h)
+|> filter(fn: (r) => r._measurement == "testmeasure" and r._field == "temperature")
+```
 
 ### *Bridging*
 
@@ -127,7 +139,6 @@ node ./<Protocol1>_simulator.json
 ```
 node ./bridgeIoT.js -p <Protocol2> -h <Protocol2_address> -c visualize
 ```
-4. Watch the magic happen
 
 **Examples:**
 
@@ -151,8 +162,8 @@ Translate from MQTT to COAP
 ```
 Translate from COAP to MQTT
 ```
-> node ./bridgeIoT.js -p coap -h coap://localhost/temperature -c translate -d mqtt -f "protocol_conf_files/mqtt_conf.json"
 > node ./coap_simulator.js
+> node ./bridgeIoT.js -p coap -h coap://localhost/temperature -c translate -d mqtt -f "protocol_conf_files/mqtt_conf.json"
 > node ./bridgeIoT.js -p "mqtt" -h "mqtt://localhost" -t "temperature" -c visualize
 ```
 Translate from MQTT to HTTP

@@ -10,12 +10,165 @@ class Bridge{
     constructor(srcHost, srcTopic, dstHost) {
 
         this.dstHost = dstHost
-        //this.dstPort = dstPort
-        //read.ReadProtocol.call(this, srcHost, srcPort, srcTopic, min, max)
         let display= new protocol.getProtocol(srcHost,srcTopic)
 
-        // FROM PROTOCOL HTTP TO COAP
-        this.bridge_http_coap = function () {
+       
+
+        // FROM PROTOCOL MQTT TO COAP
+        this.bridge_mqtt_coap = function () {
+            let server = coap.createServer()
+            let t, m, data, ind
+            let topicsMQTT = []
+            server.on('request', (req, res) => {
+                ind= topicsMQTT.findIndex(value => value.url === req.url)
+                if (ind === -1) {
+                    console.log("This topic was not found, please choose another one.");
+                    res.end()
+                }
+                else {
+                    var data = JSON.stringify({"sensorType": req.url, "value": topicsMQTT[ind].value});
+                    res.end(data)
+                    console.log("File sent:")
+                    console.log(JSON.parse(data))
+                    console.log("\n")
+                }
+
+            })
+            server.listen(this.dstPort, () => {
+                console.log('Confirmation: Sarted COAP Server. Listening...')
+            })
+
+            display.get_mqtt((stream_r) => {
+                stream_r.on('readable', () => {
+                    // Starting to read data
+                    while (data = stream_r.read()) {
+                        t = data.topic.toString();
+                        m = data.message.toString();
+                        ind= topicsMQTT.findIndex(value => value.url === '/'+ t)
+                        ind === -1 ? topicsMQTT.push({ url: '/' + t, value: m }) : topicsMQTT[ind].value = m
+                        console.log("Received:")
+                        console.log(topicsMQTT);
+                        
+                    }
+                })
+            })
+        }
+
+        // FROM PROTOCOL COAP TO MQTT
+        this.bridge_coap_mqtt = function () {
+            let my_url = new URL(display.address)
+
+            let client = mqtt.connect({ host: this.dstHost, port: 1883 })
+
+            let eventEmitter = new EventEmitter()
+            let value
+
+            client.on('connect', async () => {
+
+                eventEmitter.on('start', async () => {
+                    try {
+                        value = await display.get_coap() // Waits for COAP response
+                        var data = JSON.stringify({"sensorType": (my_url.pathname).slice(1), "value": value});
+                        client.publish((my_url.pathname).slice(1), data);
+                        console.log('Received value in COAP server and published:')
+                        console.log(JSON.parse(data))
+                        await new Promise(resolve => setTimeout(resolve, 3000)) //New coap request each 3 seconds
+                        eventEmitter.emit('start')
+                    } catch (error) {
+                        console.log("COAP error - " + error)
+                    }
+
+                })
+                eventEmitter.emit('start')
+            })
+
+        }
+
+        // FROM PROTOCOL MQTT TO HTTP
+        this.bridge_mqtt_http = function () {
+            let server = express()
+            let t, m, data, ind;
+            let topicsMQTT = []
+    
+            server.get('*', (req, res) => {
+                res.on('timeout', () => {
+                    console.log("Timeout error");
+                })
+                req.on('close', function () {
+                    console.log("Connection closed. \n");
+                })
+                ind= topicsMQTT.findIndex(value => value.url === req.path)
+                if (ind === -1) {
+                    res.sendStatus(404)
+                }
+                else {
+
+                    var data = JSON.stringify({"sensorType": req.path, "value": topicsMQTT[ind].value});
+
+                    res.send(data)
+
+                    console.log("File sent:")
+                    console.log(JSON.parse(data))
+                }
+    
+            })
+            server.listen(3001, () => {
+                console.log(`Server started at port: 3001.`)
+            })
+    
+            display.get_mqtt((stream_r) => {
+                stream_r.on('readable', () => {
+                    // There is some data to read now.
+                    while (data = stream_r.read()) {
+                        t = data.topic.toString();
+                        m = data.message.toString();
+
+                        ind= topicsMQTT.findIndex(value => value.url === '/' + t)
+                        ind === -1 ? topicsMQTT.push({ url: '/' + t, value: m }) : topicsMQTT[ind].value = m
+                        console.log("Received:")
+                        console.log(topicsMQTT);
+                        
+    
+                    }
+                })
+            })
+        }
+
+        // FROM PROTOCOL HTTP TO MQTT
+        
+        this.bridge_http_mqtt = function () {
+            let my_url = new URL(display.address)
+
+            let client = mqtt.connect({ host: this.dstHost, port: 1883})
+
+            let eventEmitter = new EventEmitter()
+
+            client.on('connect', async () => {
+
+                eventEmitter.on('start', async () => {
+
+                    try {
+                        let value = await display.get_http() //Waiting for HTTP response
+                        
+                        var data = JSON.stringify({"sensorType": (my_url.pathname).slice(1), "value": value});
+                        client.publish((my_url.pathname).slice(1), data);
+                        console.log('Received value in COAP server and published:')
+                        console.log(JSON.parse(data))
+
+
+                        await new Promise(resolve => setTimeout(resolve, 3000)) //New HTTP request each 3 seconds
+                        eventEmitter.emit('start')
+
+                    } catch (error) {
+                        console.log("HTTP error - " + error)
+                    }
+                })
+                eventEmitter.emit('start')
+            })
+        }
+
+         // FROM PROTOCOL HTTP TO COAP
+         this.bridge_http_coap = function () {
             console.log("Bridging from protocol HTTP to COAP")
             let server = coap.createServer();
             let path = new URL(display.address).pathname;
@@ -25,7 +178,11 @@ class Bridge{
                     try {
                         reply = await display.get_http();
                         console.log("Received: " + reply);
-                        res.end(reply, "UTF-8");
+                        var data = JSON.stringify({"sensorType": path, "value": reply.toString()});
+                        res.end(data);
+                        console.log("File sent:")
+                        console.log(JSON.parse(data))
+                        console.log("\n")
                     } catch (error) {
                         console.log("HTTP error - " + error);
                     }
@@ -52,12 +209,16 @@ class Bridge{
                     })
                     req.on('close', function () {
                         console.log("Connection closed.");
+                        console.log("\n")
                     })
                     reply = await display.get_coap();
                     
-                    res.set('Content-Type', 'text/plain');
+                    res.set('Content-Type', 'application/json');
                     console.log("Received: " + reply);
-                    res.send(reply);
+                    var data = JSON.stringify({"sensorType": path, "value": reply.toString()});
+                    res.send(data);
+                    console.log("File sent:")
+                    console.log(JSON.parse(data))
                  
                 } catch (error) {
                     console.log("COAP error - " + error);
@@ -67,143 +228,6 @@ class Bridge{
                 console.log(`Confirmation: Sarted HTTP Server on Port 3001${path}. Listening...`)
             })
 
-        }
-
-        // FROM PROTOCOL MQTT TO COAP
-        this.bridge_mqtt_coap = function () {
-            let server = coap.createServer()
-            let t, m, data, ind
-            let objsMqtt = []
-            server.on('request', (req, res) => {
-                ind= objsMqtt.findIndex(value => value.url === req.url)
-                if (ind === -1) {
-                    console.log("This topic was not found, please choose another one.");
-                    res.end()
-                }
-                else {
-                    res.end(objsMqtt[ind].value, "UTF-8")
-                }
-
-            })
-            server.listen(this.dstPort, () => {
-                console.log('Confirmation: Sarted COAP Server. Listening...')
-            })
-
-            display.get_mqtt((stream_r) => {
-                stream_r.on('readable', () => {
-                    // Starting to read data
-                    while (data = stream_r.read()) {
-                        t = data.topic.toString();
-                        m = data.message.toString();
-                        ind= objsMqtt.findIndex(value => value.url === '/'+ t)
-                        ind === -1 ? objsMqtt.push({ url: '/' + t, value: m }) : objsMqtt[ind].value = m
-                        console.log(objsMqtt);
-                        
-                    }
-                })
-            })
-        }
-
-        // FROM PROTOCOL MQTT TO COAP
-        this.bridge_coap_mqtt = function () {
-            let my_url = new URL(display.address)
-
-            let client = mqtt.connect({ host: this.dstHost, port: 1883 })
-
-            let eventEmitter = new EventEmitter()
-            let value
-
-            client.on('connect', async () => {
-
-                eventEmitter.on('start', async () => {
-                    try {
-                        value = await display.get_coap() // aspetta che la richiesta al server coap restituisca un messaggio
-                        client.publish((my_url.pathname).slice(1), value)
-                        console.log((my_url.pathname).slice(1))
-                        console.log('Received value in COAP server and published.')
-                        await new Promise(resolve => setTimeout(resolve, 3000)) //New coap request each 3 seconds
-                        eventEmitter.emit('start')
-                    } catch (error) {
-                        console.log("COAP error - " + error)
-                    }
-
-                })
-                eventEmitter.emit('start')
-            })
-
-        }
-
-        // FROM PROTOCOL MQTT TO HTTP
-        this.bridge_mqtt_http = function () {
-            let server = express()
-            let t, m, data, ind;
-            let objsMqtt = []
-    
-            server.get('*', (req, res) => {
-                res.on('timeout', () => {
-                    console.log("Timeout error");
-                })
-                req.on('close', function () {
-                    console.log("Connection closed.");
-                })
-                ind= objsMqtt.findIndex(value => value.url === req.path)
-                if (ind === -1) {
-                    res.sendStatus(404)
-                }
-                else {
-                    res.send(objsMqtt[ind].value)
-                }
-    
-            })
-            server.listen(3001, () => {
-                console.log(`Server started at port: 3001. Topic : ${this.topic}`)
-            })
-    
-            display.get_mqtt((stream_r) => {
-                stream_r.on('readable', () => {
-                    // There is some data to read now.
-                    while (data = stream_r.read()) {
-                        t = data.topic.toString();
-                        m = data.message.toString();
-
-                        ind= objsMqtt.findIndex(value => value.url === '/' + t)
-                        ind === -1 ? objsMqtt.push({ url: '/' + t, value: m }) : objsMqtt[ind].value = m
-                        console.log(objsMqtt);
-                        
-    
-                    }
-                })
-            })
-        }
-
-        // FROM PROTOCOL HTTP TO MQTT
-        
-        this.bridge_http_mqtt = function () {
-            let my_url = new URL(display.address)
-
-            let client = mqtt.connect({ host: this.dstHost, port: 1883})
-
-            let eventEmitter = new EventEmitter()
-
-            client.on('connect', async () => {
-
-                eventEmitter.on('start', async () => {
-
-                    try {
-                        let value = await display.get_http() // aspetta che la richiesta al server http restituisca un messaggio
-
-                        client.publish((my_url.pathname).slice(1), value)
-                        console.log((my_url.pathname).slice(1))
-                        console.log('Received value in HTTP server and published.')
-                        await new Promise(resolve => setTimeout(resolve, 3000)) //New HTTP request each 3 seconds
-                        eventEmitter.emit('start')
-
-                    } catch (error) {
-                        console.log("HTTP error - " + error)
-                    }
-                })
-                eventEmitter.emit('start')
-            })
         }
 
 

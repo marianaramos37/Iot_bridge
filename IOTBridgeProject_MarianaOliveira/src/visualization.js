@@ -13,7 +13,7 @@ class getProtocol {
             let readableStream = new Stream.Readable({
                 objectMode: true
             });
-            let client = mqtt.connect('mqtt://localhost:1883'); //TODO: change connection address to the one being passed in arguments
+            let client = mqtt.connect('mqtt://localhost:1883'); //TODO
             readableStream._read = () => { };
             callBack(readableStream);
             client.on('connect', () => {
@@ -21,7 +21,8 @@ class getProtocol {
                 console.log("Topic subscribed!");
             });
             client.on('message', (t, m) => {
-                readableStream.push({ topic: t, message: m });
+                var json = JSON.parse(m);
+                readableStream.push({ topic: t, message: json.value });
             });
         };
         // Read the COAP protocol 
@@ -35,7 +36,8 @@ class getProtocol {
             request = coap.request(url)
             request.end();
             request.on('response', (res) => {
-                let value = res.payload.toString();
+                var json = JSON.parse(res.payload.toString());
+                let value = json.value;
                 resolve(value);
             });
         })
@@ -45,7 +47,8 @@ class getProtocol {
             input_url.port = 3001
             axios.get(input_url.href)
                 .then(function (response) {
-                    let res = (response.data).toString()
+                    var json = JSON.parse(JSON.stringify(response.data));
+                    let res = json.value
                     resolve(res)
                 }).catch(function (error) {
                     reject(error.message)
@@ -68,7 +71,7 @@ function visualize(protocol,host,topic) {
                     while (data = read_stream.read()) {
                         t = data.topic.toString()
                         m = data.message.toString()
-                        console.log("Topic - "+ t +", Message : " + m)
+                        console.log("Topic - "+ t +", Value : " + m)
                     }
                 })
             })

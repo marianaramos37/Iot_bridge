@@ -80,7 +80,7 @@ function aggregate(protocol,host,topic,n) {
             })
             eventEmitterCoap.emit('start')
             break;
-        // Visualize HTTP
+        // Aggregate HTTP
         case 'http':
             let eventEmitterHttp = new EventEmitter()
             let number_http = 0;
