@@ -1,5 +1,0 @@
-{
-    "protocol":"mqtt",
-    "host": "localhost",
-    "topic":"temperature"
-}
